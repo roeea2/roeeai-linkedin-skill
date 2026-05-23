@@ -1,0 +1,12 @@
+{
+  "name": "linkedin-autoposter",
+  "version": "1.0.0",
+  "description": "Automated LinkedIn posting with Playwright",
+  "scripts": {
+    "setup": "node linkedin_setup.js",
+    "post": "node post_linkedin.js"
+  },
+  "dependencies": {
+    "playwright": "^1.44.0"
+  }
+}
