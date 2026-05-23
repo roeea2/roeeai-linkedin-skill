@@ -1,6 +1,7 @@
 /**
- * Posts content to LinkedIn using a saved auth session.
- * Requires: node linkedin_setup.js to be run first.
+ * Posts content to LinkedIn.
+ * Local mode:  uses saved Playwright session in linkedin-auth/
+ * Cloud mode:  set LINKEDIN_LI_AT env var with the li_at cookie value
  * Usage: node post_linkedin.js <path-to-post-file>
  */
 const { chromium } = require('playwright');
@@ -9,6 +10,8 @@ const path = require('path');
 
 const AUTH_DIR = path.join(__dirname, 'linkedin-auth');
 const POST_FILE = process.argv[2];
+const LI_AT = process.env.LINKEDIN_LI_AT;
+const IS_CLOUD = !!LI_AT;
 
 if (!POST_FILE) {
   console.error('Usage: node post_linkedin.js <path-to-post-file>');
@@ -20,8 +23,8 @@ if (!fs.existsSync(POST_FILE)) {
   process.exit(1);
 }
 
-if (!fs.existsSync(AUTH_DIR)) {
-  console.error('No saved session found. Run: node linkedin_setup.js first.');
+if (!IS_CLOUD && !fs.existsSync(AUTH_DIR)) {
+  console.error('No saved session found. Run: node linkedin_setup.js first, or set LINKEDIN_LI_AT env var.');
   process.exit(1);
 }
 
@@ -31,39 +34,103 @@ if (!content) {
   process.exit(1);
 }
 
-async function postToLinkedIn() {
-  const context = await chromium.launchPersistentContext(AUTH_DIR, {
-    headless: false,
-    viewport: { width: 1280, height: 800 },
-    userAgent:
-      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-  });
+async function buildContext() {
+  if (IS_CLOUD) {
+    const browser = await chromium.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+    });
+    const ctx = await browser.newContext({
+      viewport: { width: 1280, height: 800 },
+      userAgent:
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+    });
+    await ctx.addCookies([{
+      name: 'li_at',
+      value: LI_AT,
+      domain: '.linkedin.com',
+      path: '/',
+      httpOnly: true,
+      secure: true,
+    }]);
+    return { context: ctx, browser };
+  } else {
+    const ctx = await chromium.launchPersistentContext(AUTH_DIR, {
+      headless: false,
+      viewport: { width: 1280, height: 800 },
+      userAgent:
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+    });
+    return { context: ctx, browser: null };
+  }
+}
 
+async function pasteContent(page, editor, text) {
+  await editor.click();
+  await page.waitForTimeout(300);
+
+  // Try execCommand first (cross-platform, works headless)
+  const inserted = await page.evaluate((t) => {
+    try {
+      document.execCommand('insertText', false, t);
+      return true;
+    } catch {
+      return false;
+    }
+  }, text);
+
+  if (inserted) {
+    await page.waitForTimeout(500);
+    const editorText = await editor.textContent();
+    if (editorText && editorText.trim().length > 10) return;
+  }
+
+  // Fallback: platform-aware clipboard paste
+  try {
+    await page.evaluate(async (t) => { await navigator.clipboard.writeText(t); }, text);
+    const pasteKey = process.platform === 'darwin' ? 'Meta+v' : 'Control+v';
+    await page.keyboard.press(pasteKey);
+    await page.waitForTimeout(800);
+    const editorText = await editor.textContent();
+    if (editorText && editorText.trim().length > 10) return;
+  } catch {
+    // ignore
+  }
+
+  // Last resort: type it out
+  console.log('Falling back to keyboard typing...');
+  await editor.click();
+  await page.keyboard.press('Control+a');
+  await page.keyboard.press('Backspace');
+  await page.keyboard.type(text, { delay: 10 });
+}
+
+async function postToLinkedIn() {
+  const { context, browser } = await buildContext();
   const page = await context.newPage();
 
   try {
-    console.log('Navigating to LinkedIn feed...');
+    console.log(`Navigating to LinkedIn feed... (${IS_CLOUD ? 'cloud mode' : 'local mode'})`);
     await page.goto('https://www.linkedin.com/feed/', {
       waitUntil: 'domcontentloaded',
       timeout: 30000,
     });
 
     if (page.url().includes('/login') || page.url().includes('/checkpoint')) {
-      console.error('❌ Session expired. Run: node linkedin_setup.js to re-authenticate.');
-      await context.close();
+      console.error('Session expired. Run: node linkedin_setup.js to re-authenticate, or refresh LINKEDIN_LI_AT.');
+      await (browser || context).close();
       process.exit(1);
     }
 
-    console.log('✓ Authenticated');
+    console.log('Authenticated');
     await page.waitForTimeout(2000);
 
-    // --- Open the post composer ---
     const startPostSelectors = [
       'button:has-text("Start a post")',
       '[aria-label="Start a post"]',
       '.share-box-feed-entry__trigger',
       '[data-view-name="share-box-feed-entry"]',
-      '.share-creation-state__avatar-image', // clicking avatar area also opens composer
+      '.share-creation-state__avatar-image',
     ];
 
     let opened = false;
@@ -73,18 +140,14 @@ async function postToLinkedIn() {
         opened = true;
         break;
       } catch {
-        // try next selector
+        // try next
       }
     }
 
-    if (!opened) {
-      throw new Error('Could not find "Start a post" button. LinkedIn UI may have changed.');
-    }
-
-    console.log('✓ Composer opened');
+    if (!opened) throw new Error('Could not find "Start a post" button.');
+    console.log('Composer opened');
     await page.waitForTimeout(2000);
 
-    // --- Find the editor ---
     const editorSelectors = [
       '.ql-editor[contenteditable="true"]',
       '[role="textbox"][contenteditable="true"]',
@@ -100,39 +163,16 @@ async function postToLinkedIn() {
         editor = loc;
         break;
       } catch {
-        // try next selector
+        // try next
       }
     }
 
-    if (!editor) {
-      throw new Error('Could not find post editor. LinkedIn UI may have changed.');
-    }
+    if (!editor) throw new Error('Could not find post editor.');
 
-    await editor.click();
-    await page.waitForTimeout(500);
-
-    // Use clipboard paste for reliable multi-line content with special chars
-    await page.evaluate(async (text) => {
-      await navigator.clipboard.writeText(text);
-    }, content);
-
-    await page.keyboard.press('Meta+v');
-    await page.waitForTimeout(1000);
-
-    // Verify content was pasted; fall back to typing if not
-    const editorText = await editor.textContent();
-    if (!editorText || editorText.trim().length < 10) {
-      console.log('Clipboard paste failed, typing directly...');
-      await editor.click();
-      await page.keyboard.press('Meta+a');
-      await page.keyboard.press('Backspace');
-      await page.keyboard.type(content, { delay: 15 });
-    }
-
-    console.log('✓ Content entered');
+    await pasteContent(page, editor, content);
+    console.log('Content entered');
     await page.waitForTimeout(1500);
 
-    // --- Click Post ---
     const postButtonSelectors = [
       'button.share-actions__primary-action',
       'button[data-control-name="share.post"]',
@@ -147,24 +187,22 @@ async function postToLinkedIn() {
         posted = true;
         break;
       } catch {
-        // try next selector
+        // try next
       }
     }
 
-    if (!posted) {
-      throw new Error('Could not find Post button. Post was NOT published.');
-    }
+    if (!posted) throw new Error('Could not find Post button. Post was NOT published.');
 
     await page.waitForTimeout(3000);
-    console.log('\n✅ Post published successfully on LinkedIn!\n');
+    console.log('\nPost published successfully on LinkedIn!\n');
 
   } catch (err) {
-    console.error('\n❌ Error:', err.message);
-    await context.close();
+    console.error('\nError:', err.message);
+    await (browser || context).close();
     process.exit(1);
   }
 
-  await context.close();
+  await (browser || context).close();
 }
 
 postToLinkedIn();
