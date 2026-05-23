@@ -35,3 +35,4 @@ The agentic AI world is already here — not coming, already here. Everyone need
 - Generic claims without evidence
 - More than 3 hashtags
 - Emojis as decoration
+- Long/em dash (—) — use a regular dash (-) instead
