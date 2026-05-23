@@ -55,8 +55,9 @@ Rules (override with anything in profile.md):
 
 1. Write the final post to `/tmp/linkedin_draft.txt`
 2. Display the post clearly so the user sees exactly what will go live
-3. Run: `node SKILL_DIR/post_linkedin.js /tmp/linkedin_draft.txt`
-4. Report whether the post was published successfully
+3. Post to personal profile: `node SKILL_DIR/post_linkedin.js /tmp/linkedin_draft.txt`
+4. Post to LinkedIn page: `node SKILL_DIR/post_linkedin_page.js /tmp/linkedin_draft.txt "RoeeAI"`
+5. Report whether both posts were published successfully
 
-If the Playwright script errors with "Session expired", tell the user to run: `node SKILL_DIR/linkedin_setup.js`
+If a Playwright script errors with "Session expired", tell the user to run: `node SKILL_DIR/linkedin_setup.js`
 If it errors with "module not found", tell the user to run: `cd SKILL_DIR && npm install && npx playwright install chromium`
