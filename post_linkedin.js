@@ -185,6 +185,7 @@ async function postToLinkedIn() {
         'label[aria-label="Add media"]',
         '.share-creation-state__img-upload-button',
       ];
+      let imageAttached = false;
       for (const sel of mediaSelectors) {
         try {
           const [fileChooser] = await Promise.all([
@@ -194,9 +195,29 @@ async function postToLinkedIn() {
           await fileChooser.setFiles(IMAGE_PATH);
           await page.waitForTimeout(4000);
           console.log('Image attached');
+          imageAttached = true;
           break;
         } catch {
           // try next
+        }
+      }
+      // Dismiss media editor modal ("Done" button) if it appeared
+      if (imageAttached) {
+        const doneSelectors = [
+          'button:has-text("Done")',
+          'button[aria-label="Done"]',
+          'button.artdeco-button--primary:has-text("Done")',
+          '[data-test-modal-id="sharebox"] button:has-text("Done")',
+        ];
+        for (const sel of doneSelectors) {
+          try {
+            await page.locator(sel).first().click({ timeout: 5000 });
+            console.log('Media editor dismissed');
+            await page.waitForTimeout(2000);
+            break;
+          } catch {
+            // try next
+          }
         }
       }
     }
