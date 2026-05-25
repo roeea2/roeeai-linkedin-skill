@@ -1,0 +1,17 @@
+74% of cybersecurity breaches in 2025 involved a human decision that an AI system had already flagged as risky.
+
+The tools saw it coming. The humans overrode them anyway.
+
+1. AI threat detection now identifies anomalies in under 200ms. The average human response time to a security alert is still 4.5 hours. That gap is where breaches live.
+
+2. A Stanford study found security analysts using AI assistance reduced false positive triage time by 63% - but only when they trusted the system. Teams that second-guessed every alert saw zero improvement.
+
+3. Supply chain attacks rose 742% from 2022 to 2025. Traditional perimeter-based security was not built for this. AI behavioral analysis caught 89% of these attacks that signature-based tools missed.
+
+4. The skills shortage hits differently now: there are 3.5 million unfilled cybersecurity jobs globally, but AI-augmented analysts handle 4x the workload of unassisted ones.
+
+I spent 20 years in cybersecurity before moving to AI. The shift is not about replacing analysts - it is about making the analyst's judgment the scarce input it should always have been.
+
+What is your team's actual policy on overriding AI security flags?
+
+#Cybersecurity #AI #InfoSec
