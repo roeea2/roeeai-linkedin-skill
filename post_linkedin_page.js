@@ -162,7 +162,18 @@ async function postToLinkedInPage() {
 
     if (!editor) throw new Error('Could not find post editor.');
 
-    // Attach image before entering text
+    // Enter text FIRST (this always works)
+    await pasteContent(page, editor, content);
+    console.log('Content entered');
+
+    // Verify text was actually inserted
+    const enteredText = await editor.textContent();
+    if (!enteredText || enteredText.trim().length < 10) {
+      throw new Error('Text was not inserted into editor — aborting to avoid empty post.');
+    }
+    await page.waitForTimeout(1500);
+
+    // Attach image AFTER text
     if (IMAGE_PATH && fs.existsSync(IMAGE_PATH)) {
       console.log('Attaching image...');
       const mediaSelectors = [
@@ -172,7 +183,6 @@ async function postToLinkedInPage() {
         'label[aria-label="Add media"]',
         '.share-creation-state__img-upload-button',
       ];
-      let imageAttached = false;
       for (const sel of mediaSelectors) {
         try {
           const [fileChooser] = await Promise.all([
@@ -182,55 +192,19 @@ async function postToLinkedInPage() {
           await fileChooser.setFiles(IMAGE_PATH);
           await page.waitForTimeout(4000);
           console.log('Image attached');
-          imageAttached = true;
           break;
-        } catch {
-          // try next
-        }
+        } catch { /* try next */ }
       }
-      // Advance past LinkedIn's media editor (Next → Done flow)
-      if (imageAttached) {
-        for (const label of ['Next', 'Done', 'Save']) {
-          try {
-            await page.locator(`button:has-text("${label}")`).first().click({ timeout: 4000 });
-            console.log(`Media editor: clicked "${label}"`);
-            await page.waitForTimeout(2000);
-            break;
-          } catch { /* try next */ }
-        }
+      // Advance through media editor steps
+      for (const label of ['Next', 'Done', 'Save']) {
         try {
-          await page.waitForFunction(
-            () => !document.querySelector('.media-editor-content-preview__toolbar-container'),
-            { timeout: 5000 }
-          );
-        } catch { /* proceed anyway */ }
-        await page.waitForTimeout(1000);
+          await page.locator(`button:has-text("${label}")`).first().click({ timeout: 4000 });
+          console.log(`Media editor: clicked "${label}"`);
+          await page.waitForTimeout(2000);
+        } catch { /* step not present, continue */ }
       }
+      await page.waitForTimeout(1000);
     }
-
-    // Re-locate editor after image flow
-    editor = null;
-    for (const sel of editorSelectors) {
-      const loc = page.locator(sel).first();
-      try {
-        await loc.waitFor({ timeout: 4000 });
-        editor = loc;
-        break;
-      } catch { /* try next */ }
-    }
-    if (!editor) throw new Error('Could not find post editor after image attach.');
-
-    // JS-focus fallback to bypass pointer-event overlays
-    await page.evaluate(() => {
-      const el = document.querySelector('.ql-editor[contenteditable="true"]')
-        || document.querySelector('[role="textbox"][contenteditable="true"]');
-      if (el) el.focus();
-    });
-    await page.waitForTimeout(500);
-
-    await pasteContent(page, editor, content);
-    console.log('Content entered');
-    await page.waitForTimeout(1500);
 
     const postButtonSelectors = [
       'button.share-actions__primary-action',
