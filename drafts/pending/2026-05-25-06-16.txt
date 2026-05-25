@@ -1,0 +1,25 @@
+IMAGE_URL: https://d8j0ntlcm91z4.cloudfront.net/user_35p9mGav69DMFgdsxvHPBVvpL3z/hf_20260525_061443_abbece00-a6fd-4cb5-ad15-74ddda4c0609.png
+
+92% of students now use AI as their primary research partner. Only 25% of their teachers feel trained to handle it.
+
+That gap is not a technology problem. It's a training failure.
+
+What the data shows in 2026:
+
+1. Teachers using AI weekly reclaim 5.9 hours per week - 6 extra weeks per school year. Most of it flows back into admin, not better instruction.
+
+2. 81% of educators lack time to build AI curriculum. 75% lack the knowledge to do it. Students have outpaced their teachers, and the gap keeps widening.
+
+3. A peer-reviewed RCT showed AI tutoring beating classroom learning by 0.73-1.3 standard deviations - among the strongest results ever recorded for a learning intervention.
+
+4. In special education, AI cut IEP prep time by 90%. One case: a teacher identified in one week - via AI pattern detection - that a student learned better through auditory than visual cues.
+
+5. Teacher AI comfort doubled in one year, from 2.9 to 5.6 out of 10. Still below the halfway mark.
+
+I teach AI to high school students. The kids are building workflows their teachers don't know exist.
+
+The classroom is fine. The teacher training pipeline is not.
+
+What happens when students know more about the tools than the people grading them?
+
+#AIinEducation #EdTech #ArtificialIntelligence
