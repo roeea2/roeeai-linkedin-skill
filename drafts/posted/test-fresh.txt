@@ -1,0 +1,17 @@
+AI wrote 30% of the code at major tech companies in 2025. Most engineering managers still don't know how to measure output from a human-AI team.
+
+That measurement gap is the next big management problem nobody is talking about.
+
+1. GitHub Copilot users complete tasks 55% faster on average. But faster at what? Story points don't capture it. Velocity metrics break down.
+
+2. A McKinsey study found that developer productivity gains from AI vary 10x between high and low performers. The tools are the same. The workflows are not.
+
+3. 40% of engineering time is still spent on code review, debugging, and meetings - none of which AI meaningfully touches yet. Speed in coding shifts the bottleneck, not removes it.
+
+4. Companies that restructured their QA and review processes alongside AI adoption saw 3x more net output than those who just handed developers Copilot and moved on.
+
+I build agentic systems and teach developers how to work with AI. The engineers thriving are not the fastest coders - they are the ones who redesigned how they work entirely.
+
+What does your team actually measure now that AI writes the first draft?
+
+#SoftwareDevelopment #AI #EngineeringLeadership
