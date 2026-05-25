@@ -126,7 +126,8 @@ async function postToLinkedIn() {
     }
 
     console.log('Authenticated');
-    await page.waitForTimeout(2000);
+    // Wait longer for feed to fully render (VPS may be slower)
+    await page.waitForTimeout(4000);
 
     const startPostSelectors = [
       'button:has-text("Start a post")',
@@ -137,13 +138,17 @@ async function postToLinkedIn() {
       '[placeholder*="post"]',
       'div[role="button"]:has-text("Start a post")',
       'span:has-text("Start a post")',
+      '[data-control-name="share.start_a_post"]',
+      'button[class*="share-box"]',
+      'div[class*="share-creation-state"]',
     ];
 
     let opened = false;
     for (const sel of startPostSelectors) {
       try {
-        await page.locator(sel).first().click({ timeout: 4000 });
+        await page.locator(sel).first().click({ timeout: 5000 });
         opened = true;
+        console.log(`Opened composer with: ${sel}`);
         break;
       } catch {
         // try next
