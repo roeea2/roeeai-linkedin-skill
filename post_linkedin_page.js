@@ -188,26 +188,45 @@ async function postToLinkedInPage() {
           // try next
         }
       }
-      // Dismiss media editor modal ("Done" button) if it appeared
+      // Advance past LinkedIn's media editor (Next → Done flow)
       if (imageAttached) {
-        const doneSelectors = [
-          'button:has-text("Done")',
-          'button[aria-label="Done"]',
-          'button.artdeco-button--primary:has-text("Done")',
-          '[data-test-modal-id="sharebox"] button:has-text("Done")',
-        ];
-        for (const sel of doneSelectors) {
+        for (const label of ['Next', 'Done', 'Save']) {
           try {
-            await page.locator(sel).first().click({ timeout: 5000 });
-            console.log('Media editor dismissed');
+            await page.locator(`button:has-text("${label}")`).first().click({ timeout: 4000 });
+            console.log(`Media editor: clicked "${label}"`);
             await page.waitForTimeout(2000);
             break;
-          } catch {
-            // try next
-          }
+          } catch { /* try next */ }
         }
+        try {
+          await page.waitForFunction(
+            () => !document.querySelector('.media-editor-content-preview__toolbar-container'),
+            { timeout: 5000 }
+          );
+        } catch { /* proceed anyway */ }
+        await page.waitForTimeout(1000);
       }
     }
+
+    // Re-locate editor after image flow
+    editor = null;
+    for (const sel of editorSelectors) {
+      const loc = page.locator(sel).first();
+      try {
+        await loc.waitFor({ timeout: 4000 });
+        editor = loc;
+        break;
+      } catch { /* try next */ }
+    }
+    if (!editor) throw new Error('Could not find post editor after image attach.');
+
+    // JS-focus fallback to bypass pointer-event overlays
+    await page.evaluate(() => {
+      const el = document.querySelector('.ql-editor[contenteditable="true"]')
+        || document.querySelector('[role="textbox"][contenteditable="true"]');
+      if (el) el.focus();
+    });
+    await page.waitForTimeout(500);
 
     await pasteContent(page, editor, content);
     console.log('Content entered');
