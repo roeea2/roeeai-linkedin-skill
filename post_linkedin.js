@@ -239,8 +239,13 @@ async function postToLinkedIn() {
 
     if (!posted) throw new Error('Could not find Post button. Post was NOT published.');
 
-    await page.waitForTimeout(3000);
-    console.log('\nPost published successfully on LinkedIn!\n');
+    // Wait for composer modal to actually close (real confirmation of publish)
+    try {
+      await page.waitForSelector('[data-test-modal-id="sharebox"]', { state: 'hidden', timeout: 15000 });
+      console.log('\nPost published successfully on LinkedIn!\n');
+    } catch {
+      throw new Error('Composer modal still open after clicking Post — post was NOT published (possible duplicate content or LinkedIn rejection).');
+    }
 
   } catch (err) {
     console.error('\nError:', err.message);
