@@ -38,6 +38,7 @@ async function buildContext() {
   if (IS_CLOUD) {
     const browser = await chromium.launch({
       headless: true,
+      executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH || undefined,
       args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
     });
     const ctx = await browser.newContext({
