@@ -173,35 +173,33 @@ async function postToLinkedInPage() {
     }
     await page.waitForTimeout(1500);
 
-    // Attach image AFTER text
+    // Attach image AFTER text via direct file input (bypasses media editor modal)
     if (IMAGE_PATH && fs.existsSync(IMAGE_PATH)) {
       console.log('Attaching image...');
-      const mediaSelectors = [
-        'button[aria-label="Add media"]',
-        'button[aria-label="Add a photo"]',
-        'button:has-text("Add media")',
-        'label[aria-label="Add media"]',
-        '.share-creation-state__img-upload-button',
-      ];
-      for (const sel of mediaSelectors) {
-        try {
+      try {
+        const fileInput = await page.$('input[type="file"]');
+        if (fileInput) {
+          await fileInput.setInputFiles(IMAGE_PATH);
+          await page.waitForTimeout(4000);
+          console.log('Image attached via file input');
+        } else {
           const [fileChooser] = await Promise.all([
             page.waitForEvent('filechooser', { timeout: 5000 }),
-            page.locator(sel).first().click({ timeout: 3000 }),
+            page.locator('button[aria-label="Add media"], button:has-text("Add media")').first().click({ timeout: 3000 }),
           ]);
           await fileChooser.setFiles(IMAGE_PATH);
           await page.waitForTimeout(4000);
-          console.log('Image attached');
-          break;
-        } catch { /* try next */ }
-      }
-      // Advance through media editor steps
-      for (const label of ['Next', 'Done', 'Save']) {
-        try {
-          await page.locator(`button:has-text("${label}")`).first().click({ timeout: 4000 });
-          console.log(`Media editor: clicked "${label}"`);
-          await page.waitForTimeout(2000);
-        } catch { /* step not present, continue */ }
+          console.log('Image attached via file chooser');
+          for (const label of ['Next', 'Done']) {
+            try {
+              await page.locator(`button:has-text("${label}")`).first().click({ timeout: 3000 });
+              console.log(`Media editor: clicked "${label}"`);
+              await page.waitForTimeout(2000);
+            } catch { /* step not present */ }
+          }
+        }
+      } catch (imgErr) {
+        console.log(`Image attach failed (${imgErr.message}) — posting without image`);
       }
       await page.waitForTimeout(1000);
     }
