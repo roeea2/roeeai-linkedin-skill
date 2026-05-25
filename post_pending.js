@@ -27,6 +27,19 @@ function runScript(scriptName, draftPath, extraArgs = []) {
   return result.status === 0;
 }
 
+function downloadImage(url, dest) {
+  execSync(`curl -s -L "${url}" -o "${dest}"`, { timeout: 30000 });
+  return fs.existsSync(dest) && fs.statSync(dest).size > 0;
+}
+
+function parseDraft(draftPath) {
+  const raw = fs.readFileSync(draftPath, 'utf8');
+  const imageMatch = raw.match(/^IMAGE_URL:\s*(.+)$/m);
+  const imageUrl = imageMatch ? imageMatch[1].trim() : null;
+  const text = raw.replace(/^IMAGE_URL:\s*.+\n?/m, '').trim();
+  return { text, imageUrl };
+}
+
 async function main() {
   // Pull latest drafts from GitHub
   log('Pulling latest from GitHub...');
@@ -46,18 +59,40 @@ async function main() {
 
   for (const file of files) {
     const draftPath = path.join(PENDING_DIR, file);
+    const { text, imageUrl } = parseDraft(draftPath);
     log(`Processing draft: ${file}`);
-    log(fs.readFileSync(draftPath, 'utf8'));
+    if (imageUrl) log(`Image URL: ${imageUrl}`);
+    log(text);
 
-    const personalOk = runScript('post_linkedin.js', draftPath);
+    // Write clean text to temp file (without IMAGE_URL header)
+    const tmpPost = `/tmp/linkedin_post_${Date.now()}.txt`;
+    fs.writeFileSync(tmpPost, text);
+
+    // Download image if present
+    let imagePath = null;
+    if (imageUrl) {
+      const ext = imageUrl.split('?')[0].match(/\.(jpg|jpeg|png|webp)$/i)?.[1] || 'jpg';
+      imagePath = `/tmp/linkedin_image_${Date.now()}.${ext}`;
+      log('Downloading image...');
+      const ok = downloadImage(imageUrl, imagePath);
+      if (!ok) {
+        log('Image download failed — posting without image');
+        imagePath = null;
+      } else {
+        log('Image downloaded');
+      }
+    }
+
+    const personalOk = runScript('post_linkedin.js', tmpPost, imagePath ? [imagePath] : []);
     log(`Personal profile: ${personalOk ? 'SUCCESS' : 'FAILED'}`);
 
-    const pageOk = runScript('post_linkedin_page.js', draftPath, [COMPANY_ID]);
+    const pageOk = runScript('post_linkedin_page.js', tmpPost, [COMPANY_ID, ...(imagePath ? [imagePath] : [])]);
     log(`Company page: ${pageOk ? 'SUCCESS' : 'FAILED'}`);
 
     if (personalOk || pageOk) {
       const dest = path.join(POSTED_DIR, file);
       fs.renameSync(draftPath, dest);
+      try { fs.unlinkSync(tmpPost); } catch {}
       log(`Moved to posted: ${file}`);
 
       try {

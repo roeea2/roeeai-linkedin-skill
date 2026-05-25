@@ -12,6 +12,7 @@ const path = require('path');
 const AUTH_DIR = path.join(__dirname, 'linkedin-auth');
 const POST_FILE = process.argv[2];
 const COMPANY_ID = process.argv[3] || '108819055';
+const IMAGE_PATH = process.argv[4] || null;
 const LI_AT = process.env.LINKEDIN_LI_AT;
 const IS_CLOUD = !!LI_AT;
 
@@ -160,6 +161,32 @@ async function postToLinkedInPage() {
     }
 
     if (!editor) throw new Error('Could not find post editor.');
+
+    // Attach image before entering text
+    if (IMAGE_PATH && fs.existsSync(IMAGE_PATH)) {
+      console.log('Attaching image...');
+      const mediaSelectors = [
+        'button[aria-label="Add media"]',
+        'button[aria-label="Add a photo"]',
+        'button:has-text("Add media")',
+        'label[aria-label="Add media"]',
+        '.share-creation-state__img-upload-button',
+      ];
+      for (const sel of mediaSelectors) {
+        try {
+          const [fileChooser] = await Promise.all([
+            page.waitForEvent('filechooser', { timeout: 5000 }),
+            page.locator(sel).first().click({ timeout: 3000 }),
+          ]);
+          await fileChooser.setFiles(IMAGE_PATH);
+          await page.waitForTimeout(4000);
+          console.log('Image attached');
+          break;
+        } catch {
+          // try next
+        }
+      }
+    }
 
     await pasteContent(page, editor, content);
     console.log('Content entered');
