@@ -1,0 +1,21 @@
+IMAGE_URL: https://d8j0ntlcm91z4.cloudfront.net/user_35p9mGav69DMFgdsxvHPBVvpL3z/hf_20260526_151139_76de3a0b-1201-444c-abf0-81575d552925.png
+
+AI wrote the police report. AI flagged the suspect. AI decided where to patrol.
+
+In most U.S. cities, that's already happening - without a single governance policy in place.
+
+What's changing in 2026:
+
+1. Report automation is live. San Francisco PD pilots Axon's Draft One - body-cam audio converted to first-draft reports automatically. Texas, Florida, and Washington report measurable time savings.
+
+2. 70% of investigators can't review all digital evidence they collect. AI now does the triage - flagging confessions and suspects from hours of footage before a human looks.
+
+3. Market signal: AI in law enforcement is growing from $3.5B to $6.6B by 2033. Not because it's strategic - because staffing shortages leave no alternative.
+
+4. Governance is lagging badly. No federal AI policing law in the U.S. State AGs are now filling the gap. An external audit of Chicago's predictive policing tool found zero crime prevention impact - and confirmed profiling.
+
+I've spent 20+ years in cybersecurity watching adoption outrun governance. Biometric AI and predictive analytics in policing are on that same curve - except the cost of failure isn't a breach, it's a wrongful arrest.
+
+At what point does AI-assisted policing become AI-directed policing?
+
+#AI #Cybersecurity #LawEnforcement
