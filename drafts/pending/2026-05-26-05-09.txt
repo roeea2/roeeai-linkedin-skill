@@ -1,0 +1,15 @@
+IMAGE_URL: https://d8j0ntlcm91z4.cloudfront.net/user_35p9mGav69DMFgdsxvHPBVvpL3z/hf_20260526_050838_1ed5d372-746d-4267-a389-b7979a175565.png
+
+An AI tutor just outperformed traditional classroom instruction in a peer-reviewed RCT - with an effect size up to 1.3 standard deviations. That's not a pilot. That's a signal.
+
+1. 86% of students already use AI for their studies. Schools are catching up to students, not leading them.
+2. The RCT result matters: AI tutors cut time-on-task from 60 to 49 minutes while beating in-class outcomes. Less time, better results.
+3. Special education breakthrough: AI reduced IEP preparation time by 90% - and in one documented case, identified a student's preferred learning modality in a week that teachers had missed.
+4. The gap is teacher training: 55% of teachers report improved outcomes with AI, but under half received any guidance from their institutions. Tools deployed, knowledge withheld.
+5. 83% of institutions plan AI teaching assistant deployment by end of 2026 - with or without the readiness to use them well.
+
+I teach high schoolers about AI and build agentic systems. The pattern repeats: the tool is not the problem. The missing mental model is.
+
+If your school is pushing AI into classrooms without training teachers to use it intentionally - what exactly do you think students are learning?
+
+#AI #Education #AIinEducation
